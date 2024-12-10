@@ -3,18 +3,28 @@
 HOST_DIR=$1
 BOARD_DIR=$2
 IMAGES_DIR=$3
+
 # ARM Trusted Firmware BL31
 export BL31="${BINARIES_DIR}/bl31.bin"
 
-UBOOT_VERSION=24aafd7efc6827dc44cae0bfc28c08d989b34869
+# U-Boot version
+UBOOT_VERSION=u-boot-2025.01-rc4
 
 # Download U-Boot mainline
-wget "https://git.sr.ht/~tokyovigilante/u-boot/archive/${UBOOT_VERSION}.tar.gz"
-tar xf $UBOOT_VERSION.tar.gz
-cd u-boot-$UBOOT_VERSION
+wget "https://ftp.denx.de/pub/u-boot/${UBOOT_VERSION}.tar.bz2"
+tar xf $UBOOT_VERSION.tar.bz2
+cd $UBOOT_VERSION
+
+# Apply patches
+PATCHES="${BR2_EXTERNAL_BATOCERA_PATH}/board/batocera/allwinner/h616/patches/uboot-2025.01/*.patch"
+for patch in $PATCHES
+do
+echo "Applying patch: $patch"
+patch -p1 < $patch
+done
 
 # Make config
-make anbernic_rg35xxplus_defconfig
+make anbernic_rg35xx_h700_defconfig
 
 # Build it
 ARCH=aarch64 CROSS_COMPILE="${HOST_DIR}/bin/aarch64-buildroot-linux-gnu-" make -j$(nproc)
